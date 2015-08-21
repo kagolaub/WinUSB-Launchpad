@@ -153,7 +153,7 @@ extern "C"
 #define SIZEOF_DEVICE_DESCRIPTOR  0x12
 #define MAX_STRING_DESCRIPTOR_INDEX 4
 #define CONFIG_STRING_INDEX       4
-#define INTF_STRING_INDEX         3
+#define INTF_STRING_INDEX         3w
 #define USB_CONFIG_VALUE          0x01
 
 //***********************************************************************************************
