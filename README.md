@@ -1,4 +1,4 @@
-# WinUSBLaunchpad
+# WinUSB-Launchpad
 Firmware for MSP430-F5529 microcontrollers for WinUSB communication, currently implementing interrupt and bulk transfers. 
 Created using a WinUSB API modeled after the default HID/CDC APIs.
 
