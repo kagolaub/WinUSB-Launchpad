@@ -280,7 +280,8 @@ int16_t WinUSBToHostFromBuffer (uint8_t intfNum)
             USB_TX_memcpy(pEP2, WinUSBWriteCtrl[INTFNUM_OFFSET(
                                                      intfNum)].pWinUSBBufferToSend,
                 byte_count);                                                    //copy data into IEP3 X or Y buffer
-            																	//set byte count of valid data
+            pEP2[0] = 4;                                                     //set WINUSB report descriptor: 0x3F
+            pEP2[1] = 0;                                               //set byte count of valid data
 
             //64 bytes will be send: we use only one WINUSB report descriptor
             *pCT2 = 0x40;                                                       //Set counter for usb In-Transaction
@@ -381,10 +382,6 @@ void WinUSBCopyUsbToBuff (uint8_t* pEP, uint8_t* pCT,uint8_t intfNum)
         WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCurrentEpPos = pEP + nCount;
     }
 }
-
-//
-//! \endcond
-//
 
 //*****************************************************************************
 //
@@ -497,7 +494,7 @@ uint8_t USBWINUSB_receiveDataBulk (uint8_t* data, uint16_t size, uint8_t intfNum
         if (nTmp1 & EPBCNT_NAK){                                            //if the second buffer has received data?
             nTmp1 = nTmp1 & 0x7f;                                           //clear NAK bit
             WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp =
-                *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCurrentEpPos + 1);  //holds how many valid bytes in the EP buffer
+                *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCurrentEpPos);  //holds how many valid bytes in the EP buffer
             if (WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp > nTmp1){
                 WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = nTmp1;
             }
@@ -558,7 +555,7 @@ uint8_t USBWINUSB_receiveDataBulk (uint8_t* data, uint16_t size, uint8_t intfNum
         if (nTmp1 & EPBCNT_NAK){
             nTmp1 = nTmp1 & 0x7f;                                           //clear NAK bit
             WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp =
-                *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCurrentEpPos + 1);  //holds how many valid bytes in the EP buffer
+                *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCurrentEpPos);  //holds how many valid bytes in the EP buffer
             if (WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp > nTmp1){
                 WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = nTmp1;
             }
@@ -573,7 +570,7 @@ uint8_t USBWINUSB_receiveDataBulk (uint8_t* data, uint16_t size, uint8_t intfNum
                 (nTmp1 & EPBCNT_NAK)){                                      //if the second buffer has received data?
                 nTmp1 = nTmp1 & 0x7f;                                       //clear NAK bit
                 WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp =
-                    *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pEP2 + 1);       //holds how many valid bytes in the EP buffer
+                    *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pEP2);       //holds how many valid bytes in the EP buffer
                 if (WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp > nTmp1){
                     WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = nTmp1;
                 }
@@ -821,10 +818,10 @@ int16_t WinUSBToBufferFromHost (uint8_t intfNum)
 
     if (nTmp1 & EPBCNT_NAK){
         nTmp1 = nTmp1 & 0x7f;                                                   //clear NAK bit
-        WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = *(pEP1 + 1);          //holds how many valid bytes in the EP buffer
+        WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = *(pEP1);          //holds how many valid bytes in the EP buffer
         if (WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp > nTmp1){
             WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = nTmp1;
-        }                                                         //here starts user data
+        }                                                           //here starts user data
         WinUSBCopyUsbToBuff(pEP1, WinUSBReadCtrl[INTFNUM_OFFSET(
                                                intfNum)].pCT1,intfNum);
 
@@ -833,7 +830,7 @@ int16_t WinUSBToBufferFromHost (uint8_t intfNum)
         if ((WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesToReceiveLeft > 0) &&   //do we have more data to send?
             (nTmp1 & EPBCNT_NAK)){                                              //if the second buffer has received data?
             nTmp1 = nTmp1 & 0x7f;                                               //clear NAK bit
-            WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = *(pEP1 + 1);      //holds how many valid bytes in the EP buffer
+            WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = *(pEP1);      //holds how many valid bytes in the EP buffer
             if (WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp > nTmp1){
                 WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp = nTmp1;
             }
@@ -1115,7 +1112,7 @@ uint8_t USBWINUSB_getBytesInUSBBuffer (uint8_t intfNum)
     	                                            //was read of the OEP buffer
         bTmp1 = WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].nBytesInEp;
         if (*WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCT2 & EPBCNT_NAK){           //the next buffer has a valid data packet
-            bTmp2 = *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pEP2 + 1);           //holds how many valid bytes in the EP buffer
+            bTmp2 = *(WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pEP2);           //holds how many valid bytes in the EP buffer
             if (bTmp2 >
                 (*WinUSBReadCtrl[INTFNUM_OFFSET(intfNum)].pCT2 & 0x7F)){       //check if all data received correctly
                 bTmp1 +=
@@ -1127,15 +1124,15 @@ uint8_t USBWINUSB_getBytesInUSBBuffer (uint8_t intfNum)
     } else {
         if (tOutputEndPointDescriptorBlock[edbIndex].bEPBCTX & EPBCNT_NAK){     //this buffer has a valid data packet
             bTmp2 = tOutputEndPointDescriptorBlock[edbIndex].bEPBCTX & 0x7F;
-            bTmp1 = *((uint8_t*)stUsbHandle[intfNum].oep_X_Buffer + 1);
+            bTmp1 = *((uint8_t*)stUsbHandle[intfNum].oep_X_Buffer);
             if (bTmp2 < bTmp1){                                             //check if the count (second byte) is valid
                 bTmp1 = bTmp2;
             }
         }
         if (tOutputEndPointDescriptorBlock[edbIndex].bEPBCTY & EPBCNT_NAK){     //this buffer has a valid data packet
             bTmp2 = tOutputEndPointDescriptorBlock[edbIndex].bEPBCTY & 0x7F;
-            if (bTmp2 > *((uint8_t*)stUsbHandle[intfNum].oep_Y_Buffer + 1)){   //check if the count (second byte) is valid
-                bTmp1 += *((uint8_t*)stUsbHandle[intfNum].oep_Y_Buffer + 1);
+            if (bTmp2 > *((uint8_t*)stUsbHandle[intfNum].oep_Y_Buffer)){   //check if the count (second byte) is valid
+                bTmp1 += *((uint8_t*)stUsbHandle[intfNum].oep_Y_Buffer);
             } else {
                 bTmp1 += bTmp2;
             }
